@@ -836,11 +836,12 @@ def _build_curve_png_bytes(tamis_vals, passant_vals, ech_label="Ech1", fuseau_de
 
         ax.set_xticks(ticks_positions)
         ax.set_xticklabels(ticks_labels, rotation=70, ha='right', fontsize=7)
-        ax.set_xlabel("Ouverture des tamis (mm)")
-        ax.set_ylabel("% Passant (%)")
+        ax.set_xlabel("Ouverture des tamis (mm)", fontsize=8)
+        ax.set_ylabel("% Passant (%)", fontsize=8)
+        ax.tick_params(axis="y", labelsize=7)
         ax.set_ylim(-2, 105)
         ax.grid(True, which="both", linestyle=":", alpha=0.6)
-        ax.legend(loc="lower right")
+        ax.legend(loc="upper left", fontsize=7, framealpha=0.9)
         fig.tight_layout()
 
         buf = io.BytesIO()
@@ -922,19 +923,20 @@ def generate_pdf(header_info, data_dict, type_mat, curve_img_path=None):
     tamis_mesures = data_dict.get("Courbe Tamis (mm)") or []
     passant_mesures = data_dict.get("Courbe Passant (%)") or []
 
+    RH = 3.7  # hauteur de ligne du tableau des résultats (compact)
     pdf.set_font("Helvetica", "B", 7)
     pdf.multi_cell(190, 3.5, "TRAVAUX D'EXECUTION DE TERRASSEMENT, OUVRAGES D'ART ET RETABLISSEMENTS DE COMMUNICATION ENTRE PK 5+450 et PK 10+000 - GARE CASA SUD", 0, "C")
-    pdf.ln(2)
+    pdf.ln(1.2)
 
     pdf.set_font("Helvetica", "", 8)
-    pdf.cell(95, 5.5, f" Client : TGCC", 1, 0, "L")
-    pdf.cell(95, 5.5, f" Rapport d'Essai N° : {header_info.get('num_rapport') or 'N/A'}", 1, 1, "L")
-    pdf.cell(95, 5.5, f" Dossier : 2025-260-05985-2025-0247", 1, 0, "L")
-    pdf.cell(95, 5.5, f" Date du prélèvement : {header_info.get('date_essai') or ''}", 1, 1, "L")
-    pdf.cell(95, 5.5, f" Lieux de prélèvement : {header_info.get('lieu') or 'Stock sur chantier'}", 1, 0, "L")
-    pdf.cell(95, 5.5, f" Provenance d'échantillon : {header_info.get('pk') or ''}", 1, 1, "L")
-    pdf.cell(190, 5.5, f" Objet : IDENTIFICATION DU MATÉRIAU - {mat_code} ({mat_label.upper()})", 1, 1, "L")
-    pdf.ln(2)
+    pdf.cell(95, 4.8, f" Client : TGCC", 1, 0, "L")
+    pdf.cell(95, 4.8, f" Rapport d'Essai N° : {header_info.get('num_rapport') or 'N/A'}", 1, 1, "L")
+    pdf.cell(95, 4.8, f" Dossier : 2025-260-05985-2025-0247", 1, 0, "L")
+    pdf.cell(95, 4.8, f" Date du prélèvement : {header_info.get('date_essai') or ''}", 1, 1, "L")
+    pdf.cell(95, 4.8, f" Lieux de prélèvement : {header_info.get('lieu') or 'Stock sur chantier'}", 1, 0, "L")
+    pdf.cell(95, 4.8, f" Provenance d'échantillon : {header_info.get('pk') or ''}", 1, 1, "L")
+    pdf.cell(190, 4.8, f" Objet : IDENTIFICATION DU MATÉRIAU - {mat_code} ({mat_label.upper()})", 1, 1, "L")
+    pdf.ln(1.2)
 
     pdf.set_font("Helvetica", "B", 7)
     ag_norme = "NM EN 933-1" if uses_granulats_sheet(mat_code, mat_config) else "NM 00.8.082"
@@ -952,12 +954,12 @@ def generate_pdf(header_info, data_dict, type_mat, curve_img_path=None):
             normes_txt += " | VB: NM EN 933-9"
         if mat_config.get("use_vbs_for_gtr"):
             normes_txt += " | VBS: NM EN 933-9"
-    pdf.cell(190, 4.5, normes_txt, 1, 1, "L")
-    pdf.ln(2)
+    pdf.cell(190, 4.0, normes_txt, 1, 1, "L")
+    pdf.ln(1.2)
 
     pdf.set_font("Helvetica", "B", 8)
     pdf.set_fill_color(220, 230, 242)
-    pdf.cell(190, 5.5, " Résultats d'essais", 1, 1, "C", fill=True)
+    pdf.cell(190, 4.5, " Résultats d'essais", 1, 1, "C", fill=True)
     
     ech_label = data_dict.get('Ref Echantillon', 'Ech 1')
     val_wopt = str(_zero_to_star(data_dict.get('wL (%)', '14,2')))
@@ -965,16 +967,16 @@ def generate_pdf(header_info, data_dict, type_mat, curve_img_path=None):
     val_class = str(data_dict.get('Classification (Auto)', data_dict.get('Classe GTR (Auto)', 'B5')))
 
     if family == "REMBLAI" and mat_code == "REM-CTG2":
-        pdf.set_font("Helvetica", "B", 7.5)
-        pdf.cell(60, 5.5, "", 1, 0, "C", fill=True)
-        pdf.cell(65, 5.5, str(ech_label), 1, 0, "C", fill=True)
-        pdf.cell(65, 5.5, "Exigence", 1, 1, "C", fill=True)
+        pdf.set_font("Helvetica", "B", 7)
+        pdf.cell(60, RH, "", 1, 0, "C", fill=True)
+        pdf.cell(65, RH, str(ech_label), 1, 0, "C", fill=True)
+        pdf.cell(65, RH, "Exigence", 1, 1, "C", fill=True)
 
         def _row3r(label, value, exigence="-"):
-            pdf.set_font("Helvetica", "", 7.5)
-            pdf.cell(60, 5, f" {label}", 1, 0, "L")
-            pdf.cell(65, 5, str(_zero_to_star(value)), 1, 0, "C")
-            pdf.cell(65, 5, str(exigence), 1, 1, "C")
+            pdf.set_font("Helvetica", "", 7)
+            pdf.cell(60, RH, f" {label}", 1, 0, "L")
+            pdf.cell(65, RH, str(_zero_to_star(value)), 1, 0, "C")
+            pdf.cell(65, RH, str(exigence), 1, 1, "C")
 
         _row3r("%< 80 µm", data_dict.get('Passant Fines (%)', data_dict.get('Passant 80um (%)', '22,3')), "< 15%")
         _row3r("%< 2 mm", data_dict.get('Passant 2mm (%)', '66'))
@@ -985,27 +987,27 @@ def generate_pdf(header_info, data_dict, type_mat, curve_img_path=None):
         _row3r("VBS", data_dict.get('VBS', '0,42'))
         _row3r("Indice de Plasticité (IP)", data_dict.get('IP (%)', '4,2'))
 
-        pdf.cell(60, 5, " Proctor", 1, 0, "L")
+        pdf.cell(60, RH, " Proctor", 1, 0, "L")
         pdf.set_font("Helvetica", "B", 7)
-        pdf.cell(26, 5, " Wopt", 1, 0, "C", fill=True)
-        pdf.set_font("Helvetica", "", 7.5)
-        pdf.cell(26, 5, val_wopt, 1, 0, "C")
+        pdf.cell(26, RH, " Wopt", 1, 0, "C", fill=True)
+        pdf.set_font("Helvetica", "", 7)
+        pdf.cell(26, RH, val_wopt, 1, 0, "C")
         pdf.set_font("Helvetica", "B", 7)
-        pdf.cell(34, 5, " Densité OPN", 1, 0, "C", fill=True)
-        pdf.set_font("Helvetica", "", 7.5)
-        pdf.cell(44, 5, val_dens, 1, 1, "C")
+        pdf.cell(34, RH, " Densité OPN", 1, 0, "C", fill=True)
+        pdf.set_font("Helvetica", "", 7)
+        pdf.cell(44, RH, val_dens, 1, 1, "C")
 
         _row3r("Classification GTR", val_class, "D3,C2B3,C2,B4,B5,R21,R22")
 
     elif family == "REMBLAI":
-        pdf.set_font("Helvetica", "B", 7.5)
-        pdf.cell(60, 5.5, "", 1, 0, "C", fill=True)
-        pdf.cell(130, 5.5, str(ech_label), 1, 1, "C", fill=True)
+        pdf.set_font("Helvetica", "B", 7)
+        pdf.cell(60, RH, "", 1, 0, "C", fill=True)
+        pdf.cell(130, RH, str(ech_label), 1, 1, "C", fill=True)
 
         def _row(label, value):
-            pdf.set_font("Helvetica", "", 7.5)
-            pdf.cell(60, 5, f" {label}", 1, 0, "L")
-            pdf.cell(130, 5, str(_zero_to_star(value)), 1, 1, "C")
+            pdf.set_font("Helvetica", "", 7)
+            pdf.cell(60, RH, f" {label}", 1, 0, "L")
+            pdf.cell(130, RH, str(_zero_to_star(value)), 1, 1, "C")
 
         _row("%< 80 µm", data_dict.get('Passant Fines (%)', data_dict.get('Passant 80um (%)', data_dict.get('Passant 80µm (%)', '22,3'))))
         _row("%< 2 mm", data_dict.get('Passant 2mm (%)', '66'))
@@ -1014,32 +1016,32 @@ def generate_pdf(header_info, data_dict, type_mat, curve_img_path=None):
         _row("VBS", data_dict.get('VBS', '0,42'))
         _row("Indice de Plasticité (IP)", data_dict.get('IP (%)', '4,2'))
 
-        pdf.cell(60, 5, " Proctor", 1, 0, "L")
+        pdf.cell(60, RH, " Proctor", 1, 0, "L")
         pdf.set_font("Helvetica", "B", 7)
-        pdf.cell(26, 5, " Wopt", 1, 0, "C", fill=True)
-        pdf.set_font("Helvetica", "", 7.5)
-        pdf.cell(26, 5, val_wopt, 1, 0, "C")
+        pdf.cell(26, RH, " Wopt", 1, 0, "C", fill=True)
+        pdf.set_font("Helvetica", "", 7)
+        pdf.cell(26, RH, val_wopt, 1, 0, "C")
         pdf.set_font("Helvetica", "B", 7)
-        pdf.cell(34, 5, " Densité OPN", 1, 0, "C", fill=True)
-        pdf.set_font("Helvetica", "", 7.5)
-        pdf.cell(44, 5, val_dens, 1, 1, "C")
+        pdf.cell(34, RH, " Densité OPN", 1, 0, "C", fill=True)
+        pdf.set_font("Helvetica", "", 7)
+        pdf.cell(44, RH, val_dens, 1, 1, "C")
 
-        pdf.cell(60, 5, " GTR", 1, 0, "L")
+        pdf.cell(60, RH, " GTR", 1, 0, "L")
         pdf.set_font("Helvetica", "B", 8)
-        pdf.cell(130, 5, val_class, 1, 1, "C")
+        pdf.cell(130, RH, val_class, 1, 1, "C")
 
     else:
         exigence_col_label = mat_config.get("exigence_col_label", "Exigence marché et CPC")
-        pdf.set_font("Helvetica", "B", 7.5)
-        pdf.cell(60, 4.5, "", 1, 0, "C", fill=True)
-        pdf.cell(65, 4.5, str(ech_label), 1, 0, "C", fill=True)
-        pdf.cell(65, 4.5, exigence_col_label, 1, 1, "C", fill=True)
+        pdf.set_font("Helvetica", "B", 7)
+        pdf.cell(60, RH, "", 1, 0, "C", fill=True)
+        pdf.cell(65, RH, str(ech_label), 1, 0, "C", fill=True)
+        pdf.cell(65, RH, exigence_col_label, 1, 1, "C", fill=True)
 
         def _row3(label, value, exigence="-"):
-            pdf.set_font("Helvetica", "", 7.5)
-            pdf.cell(60, 4.5, f" {label}", 1, 0, "L")
-            pdf.cell(65, 4.5, str(_zero_to_star(value)), 1, 0, "C")
-            pdf.cell(65, 4.5, str(exigence), 1, 1, "C")
+            pdf.set_font("Helvetica", "", 7)
+            pdf.cell(60, RH, f" {label}", 1, 0, "L")
+            pdf.cell(65, RH, str(_zero_to_star(value)), 1, 0, "C")
+            pdf.cell(65, RH, str(exigence), 1, 1, "C")
 
         _row3("%< 0,063 mm", data_dict.get('Passant Fines (%)', data_dict.get('Passant 80um (%)', '22,3')))
         _row3("%< 2 mm", data_dict.get('Passant 2mm (%)', '66'))
@@ -1071,39 +1073,39 @@ def generate_pdf(header_info, data_dict, type_mat, curve_img_path=None):
         if "MB (g/kg)" in data_dict:
             _row3("Bleu de Méthylène MB (0/2mm)", data_dict.get('MB (g/kg)', '-'), mat_config.get("mb_exigence_txt", "-"))
 
-        pdf.cell(60, 4.5, " Proctor", 1, 0, "L")
+        pdf.cell(60, RH, " Proctor", 1, 0, "L")
         pdf.set_font("Helvetica", "B", 7)
-        pdf.cell(26, 4.5, " Wopt", 1, 0, "C", fill=True)
-        pdf.set_font("Helvetica", "", 7.5)
-        pdf.cell(26, 4.5, val_wopt, 1, 0, "C")
+        pdf.cell(26, RH, " Wopt", 1, 0, "C", fill=True)
+        pdf.set_font("Helvetica", "", 7)
+        pdf.cell(26, RH, val_wopt, 1, 0, "C")
         pdf.set_font("Helvetica", "B", 7)
-        pdf.cell(34, 4.5, " Densité OPN", 1, 0, "C", fill=True)
-        pdf.set_font("Helvetica", "", 7.5)
-        pdf.cell(44, 4.5, val_dens, 1, 1, "C")
+        pdf.cell(34, RH, " Densité OPN", 1, 0, "C", fill=True)
+        pdf.set_font("Helvetica", "", 7)
+        pdf.cell(44, RH, val_dens, 1, 1, "C")
 
         if "Classification GTR (Extra)" in data_dict:
-            pdf.set_font("Helvetica", "", 7.5)
-            pdf.cell(60, 4.5, " Classification GTR", 1, 0, "L")
+            pdf.set_font("Helvetica", "", 7)
+            pdf.cell(60, RH, " Classification GTR", 1, 0, "L")
             pdf.set_font("Helvetica", "B", 8)
-            pdf.cell(130, 4.5, str(data_dict.get("Classification GTR (Extra)")), 1, 1, "C")
+            pdf.cell(130, RH, str(data_dict.get("Classification GTR (Extra)")), 1, 1, "C")
 
         if "Qualite RT" in data_dict:
-            pdf.set_font("Helvetica", "", 7.5)
-            pdf.cell(60, 4.5, " classe de qualité ST 590", 1, 0, "L")
+            pdf.set_font("Helvetica", "", 7)
+            pdf.cell(60, RH, " classe de qualité ST 590", 1, 0, "L")
             pdf.set_font("Helvetica", "B", 8)
-            pdf.cell(130, 4.5, str(data_dict.get("Qualite RT")), 1, 1, "C")
+            pdf.cell(130, RH, str(data_dict.get("Qualite RT")), 1, 1, "C")
 
         if "Cu" in data_dict:
-            pdf.set_font("Helvetica", "", 7.5)
-            pdf.cell(60, 4.5, " Coeff. uniformité Cu (D60/D10)", 1, 0, "L")
-            pdf.cell(65, 4.5, str(data_dict.get("Cu")), 1, 0, "C")
-            pdf.cell(65, 4.5, "> 4", 1, 1, "C")
+            pdf.set_font("Helvetica", "", 7)
+            pdf.cell(60, RH, " Coeff. uniformité Cu (D60/D10)", 1, 0, "L")
+            pdf.cell(65, RH, str(data_dict.get("Cu")), 1, 0, "C")
+            pdf.cell(65, RH, "> 4", 1, 1, "C")
 
         if "Cc" in data_dict:
-            pdf.set_font("Helvetica", "", 7.5)
-            pdf.cell(60, 4.5, " Coeff. courbure Cc (D30²/D10.D60)", 1, 0, "L")
-            pdf.cell(65, 4.5, str(data_dict.get("Cc")), 1, 0, "C")
-            pdf.cell(65, 4.5, "1 à 4", 1, 1, "C")
+            pdf.set_font("Helvetica", "", 7)
+            pdf.cell(60, RH, " Coeff. courbure Cc (D30²/D10.D60)", 1, 0, "L")
+            pdf.cell(65, RH, str(data_dict.get("Cc")), 1, 0, "C")
+            pdf.cell(65, RH, "1 à 4", 1, 1, "C")
 
     pdf.ln(2)
 
@@ -1134,17 +1136,17 @@ def generate_pdf(header_info, data_dict, type_mat, curve_img_path=None):
     comments_h = 4.5 + max(1, len(obs_lines)) * OBS_LINE_H + 1.5
     signature_h = 4.5 + 8
     CURVE_HEADER_H = 5
-    PAGE_BOTTOM = 280.0   # le pied de page commence à ~285 mm
+    PAGE_BOTTOM = 281.0   # le pied de page commence à ~285 mm
     n_fuseau = len(fuseau_def) if fuseau_def else 0
 
     row_h = 4.2
-    curve_h = 62.0
-    for candidate in (4.2, 3.8, 3.5, 3.2, 3.0):
+    curve_h = 85.0
+    for candidate in (4.0, 3.7, 3.5, 3.4, 3.2, 3.0):
         row_h = candidate
         fuseau_h = (4.5 + 4.5 + n_fuseau * row_h + 1.5) if fuseau_def else 0.0
         free = PAGE_BOTTOM - pdf.get_y() - CURVE_HEADER_H - 3 - fuseau_h - 2 - comments_h - signature_h - 1.5
-        curve_h = min(62.0, free)
-        if curve_h >= 48.0:
+        curve_h = min(85.0, free)
+        if curve_h >= 60.0:
             break
     curve_h = max(curve_h, 25.0)
 
