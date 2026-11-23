@@ -713,16 +713,29 @@ def generate_synthesis_excel(filtered_pvs, selected_month):
     return output.getvalue()
 
 def _find_lpee_logo_path():
-    """Cherche le logo LPEE à quelques emplacements usuels du dépôt.
+    """Cherche le logo LPEE (logo.png.jpg, au même niveau que app.py).
     Retourne le chemin trouvé, ou None si absent (aucun logo n'est requis
     pour que les PV se génèrent correctement)."""
-    _candidates = [
-        os.path.join(os.path.dirname(os.path.abspath(__file__)), 'assets', 'lpee_logo.png'),
-        os.path.join(os.path.dirname(os.path.abspath(__file__)), 'lpee_logo.png'),
-        os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'assets', 'lpee_logo.png'),
-        '/mnt/user-data/uploads/lpee_logo.png',
-    ]
-    return next((p for p in _candidates if os.path.isfile(p)), None)
+    _names = ['logo.png.jpg', 'logo.png', 'logo.jpg', 'logo.jpeg', 'lpee_logo.png']
+    _dirs = []
+    try:
+        _here = os.path.dirname(os.path.abspath(__file__))
+        _dirs += [_here, os.path.join(_here, '..'), os.path.join(_here, 'assets')]
+    except NameError:
+        pass
+    # Streamlit est lancé depuis le dossier de app.py : le répertoire courant
+    # correspond donc au niveau de app.py.
+    _dirs += [os.getcwd(), os.path.join(os.getcwd(), 'assets')]
+    for _d in _dirs:
+        for _n in _names:
+            _p = os.path.normpath(os.path.join(_d, _n))
+            if os.path.isfile(_p):
+                return _p
+    return None
+
+def _logo_mime(path):
+    ext = os.path.splitext(path)[1].lower()
+    return 'image/png' if ext == '.png' else 'image/jpeg'
 
 def generate_pv_html(pv_info, info_p, data_granulats):
     """Génère le document HTML complet et autonome du PV pour impression / téléchargement."""
@@ -751,7 +764,7 @@ def generate_pv_html(pv_info, info_p, data_granulats):
     if _logo_b64:
         org_header_html = f"""
         <div class="lpee-org-header">
-            <img src="data:image/png;base64,{_logo_b64}" alt="Logo LPEE" class="lpee-org-logo">
+            <img src="data:{_logo_mime(_logo_path)};base64,{_logo_b64}" alt="Logo LPEE" class="lpee-org-logo">
             <div class="lpee-org-text">
                 LABORATOIRE PUBLIC D'ESSAIS ET D'ÉTUDES (LPEE)<br>
                 <span>CENTRE TECHNIQUE REGIONAL DE CASABLANCA-SETTAT BENI MELLAL</span>
